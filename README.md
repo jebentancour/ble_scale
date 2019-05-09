@@ -1,2 +1,1 @@
-# ble_scale
-BLE scale
+# ble scale
