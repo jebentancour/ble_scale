@@ -17,10 +17,11 @@
 #include "ble_uart.h"
 #include "batt.h"
 #include "rgb_led.h"
+#include "HX711.h"
 
 volatile uint8_t clock_tick_flag;
 
-#define SEND_INTERVAL 1000 //* CLOCK_TICK_MS
+#define SEND_INTERVAL 1000
 
 uint32_t now;
 uint32_t last_send;
@@ -80,6 +81,8 @@ int main(void){
     NRF_LOG_INFO("VCC = %d.%d V\n", voltage / 1000, voltage % 1000);
     NRF_LOG_FLUSH();
 
+    HX711_init();
+
     while (true){
         now = clock_get_timestamp();
 
@@ -95,6 +98,7 @@ int main(void){
 
         if (long_button_flag){
           long_button_flag = 0;
+          HX711_tare(10);
           NRF_LOG_INFO("long_button_flag\n");
           NRF_LOG_FLUSH();
         }
@@ -115,7 +119,7 @@ int main(void){
 
         if (now - last_send > SEND_INTERVAL){
           if (ble_uart_tx_flag == 1){
-            ble_msg_len = sprintf((char*)ble_uart_tx_msg, "Hola\n");
+            ble_msg_len = sprintf((char*)ble_uart_tx_msg, "%ld\n", HX711_get_units(2));
             ble_uart_data_send(ble_uart_tx_msg, ble_msg_len);
             last_send = now;
           }
