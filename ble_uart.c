@@ -82,6 +82,8 @@
 #include "app_timer.h"
 #include "app_util_platform.h"
 
+#include "rgb_led.h"
+
 #define NRF_CLOCK_LFCLKSRC			  	{.source = NRF_CLOCK_LF_SRC_XTAL, .rc_ctiv = 0, .rc_temp_ctiv = 0, .xtal_accuracy=NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM}
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0										        /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
@@ -95,7 +97,7 @@
 #define CENTRAL_LINK_COUNT			  	0										   		/**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
 #define PERIPHERAL_LINK_COUNT		   	1										   		/**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
-#define DEVICE_NAME					 	"RYO_UART"								  		/**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME					 	"SCALE_UART"								  		/**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE		   	BLE_UUID_TYPE_VENDOR_BEGIN				  		/**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_ADV_INTERVAL				64										  		/**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
@@ -264,12 +266,14 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 	switch (ble_adv_evt)
 	{
 		case BLE_ADV_EVT_FAST:
-			//NRF_LOG_INFO("BLE_ADV_EVT_FAST\n");
-			//NRF_LOG_FLUSH();
+			rgb_led_breathe(BLUE, 100, 5);
+			NRF_LOG_INFO("BLE_ADV_EVT_FAST\n");
+			NRF_LOG_FLUSH();
 			break;
 		case BLE_ADV_EVT_IDLE:
-			//NRF_LOG_INFO("BLE_ADV_EVT_IDLE\n");
-			//NRF_LOG_FLUSH();
+			rgb_led_full(BLACK);
+			NRF_LOG_INFO("BLE_ADV_EVT_IDLE\n");
+			NRF_LOG_FLUSH();
 			break;
 		default:
 			break;
@@ -291,10 +295,16 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 			*m_tx_flag = 1;
 			*m_rx_flag = 0;
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+			rgb_led_full(BLUE);
+			NRF_LOG_INFO("BLE_GAP_EVT_CONNECTED\n");
+			NRF_LOG_FLUSH();
 			break; // BLE_GAP_EVT_CONNECTED
 
 		case BLE_GAP_EVT_DISCONNECTED:
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
+			rgb_led_full(BLACK);
+			NRF_LOG_INFO("BLE_GAP_EVT_DISCONNECTED\n");
+			NRF_LOG_FLUSH();
 			break; // BLE_GAP_EVT_DISCONNECTED
 
 		case BLE_GAP_EVT_SEC_PARAMS_REQUEST:

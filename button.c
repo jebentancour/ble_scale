@@ -9,8 +9,9 @@
 #include "nrf_gpio.h"
 
 #include "clock.h"
+#include "rgb_led.h"
 
-#define BUTTON_PIN					0
+#define BUTTON_PIN					16
 
 #define LONG_CLICK_MS 			1250
 #define DOUBLE_CLICK_MS 		250

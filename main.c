@@ -16,8 +16,14 @@
 #include "button.h"
 #include "ble_uart.h"
 #include "batt.h"
+#include "rgb_led.h"
 
 volatile uint8_t clock_tick_flag;
+
+#define SEND_INTERVAL 1000 //* CLOCK_TICK_MS
+
+uint32_t now;
+uint32_t last_send;
 
 volatile uint8_t button_flag;
 volatile uint8_t long_button_flag;
@@ -48,6 +54,9 @@ int main(void){
     clock_tick_set_flag(&clock_tick_flag);
     clock_init();
 
+    rgb_led_init();
+    rgb_led_full(BLACK);
+
     button_flag = 0;
     gpio_button_set_flag(&button_flag);
     long_button_flag = 0;
@@ -72,10 +81,14 @@ int main(void){
     NRF_LOG_FLUSH();
 
     while (true){
-        gpio_process(clock_get_timestamp());   // GPIO polling
+        now = clock_get_timestamp();
+
+        rgb_led_update(now); // update LEDs animation
+        gpio_process(now);   // GPIO polling
 
         if (button_flag){
           button_flag = 0;
+          ble_uart_advertising_start();
           NRF_LOG_INFO("button_flag\n");
           NRF_LOG_FLUSH();
         }
@@ -98,6 +111,14 @@ int main(void){
           NRF_LOG_INFO("ble_uart_rx_flag\n");
           NRF_LOG_HEXDUMP_INFO(ble_uart_rx_msg, ble_msg_len);
           NRF_LOG_FLUSH();
+        }
+
+        if (now - last_send > SEND_INTERVAL){
+          if (ble_uart_tx_flag == 1){
+            ble_msg_len = sprintf((char*)ble_uart_tx_msg, "Hola\n");
+            ble_uart_data_send(ble_uart_tx_msg, ble_msg_len);
+            last_send = now;
+          }
         }
     }
 }
